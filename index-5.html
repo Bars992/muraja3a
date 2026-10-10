@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Muraja'a — Révision du Coran</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#edf1ef; --card:#ffffff; --ink:#14231f; --mute:#62746d; --line:#d8e0dc;
+  --accent:#0d6a55; --accent-soft:#d9efe8; --on-accent:#ffffff;
+  --late:#b3261e; --late-soft:#fbe3e0; --due:#9a6200; --due-soft:#fdf0d4;
+  --err:#c62828;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1815; --card:#16231f; --ink:#e6f0ec; --mute:#92a69e; --line:#27382f;
+    --accent:#3fc6a1; --accent-soft:#16372f; --on-accent:#06231b;
+    --late:#ff8a80; --late-soft:#3a1c19; --due:#f2c066; --due-soft:#35290f;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1815; --card:#16231f; --ink:#e6f0ec; --mute:#92a69e; --line:#27382f;
+  --accent:#3fc6a1; --accent-soft:#16372f; --on-accent:#06231b;
+  --late:#ff8a80; --late-soft:#3a1c19; --due:#f2c066; --due-soft:#35290f;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:#faf8f4;color:var(--ink);font-family:'Figtree',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:16px;line-height:1.45;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.ar{font-family:'Amiri Quran','Scheherazade New','Traditional Arabic',serif}
+
+/* ===== Lecteur (style mushaf) ===== */
+#reader{position:fixed;inset:0;display:flex;flex-direction:column;background:#faf8f4;color:#111;padding-top:env(safe-area-inset-top,0px)}
+.hd{display:flex;align-items:center;gap:4px;padding:8px 6px 8px 6px;background:#faf8f4}
+.hb{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;flex:none}
+.hb svg{width:26px;height:26px}
+.tb{flex:1;min-width:0;background:#ececec;border-radius:8px;border:1px solid #dcdcdc;padding:7px 12px;display:flex;align-items:center;justify-content:space-between;text-align:left;gap:8px}
+.tb b{display:block;font-size:19px;font-weight:500;line-height:1.2}
+.tb small{display:block;font-size:14px;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb svg{width:34px;height:34px;color:#9b9b9b;flex:none}
+.lbar{display:flex;align-items:center;gap:10px;background:#fbe3e0;color:#8f1d16;padding:9px 14px;font-size:14px;font-weight:600}
+.lbar span{flex:1}
+.lbar button{background:#b3261e;color:#fff;border-radius:10px;padding:8px 14px;min-height:40px;font-weight:600}
+.pagewrap{flex:1;overflow:auto;padding:6px 8px 12px;position:relative}
+.pagewrap::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;border-left:1px solid #d6d3cc;border-right:1px solid #d6d3cc}
+#mush{max-width:520px;margin:0 auto;direction:rtl;color:#111}
+.ln{display:flex;white-space:nowrap;align-items:center}
+.ln.j{justify-content:space-between}
+.ln.c{justify-content:center;gap:.4em}
+.ln.hl{border-bottom:1px solid #ebe8e1}
+.w{padding:0 .03em}
+.w.hid,.w.hid span{color:transparent!important;user-select:none}
+.w.hid{cursor:pointer}
+.w.hid.cur{background:linear-gradient(#0d6a55,#0d6a55) no-repeat 0 82%/100% 3px;animation:pulse 1.3s ease-in-out infinite}
+.w.err{background:linear-gradient(#c62828,#c62828) no-repeat 0 88%/100% 2px}
+.mk{display:inline-flex;align-items:center;justify-content:center;flex:none;width:1.75em;height:1.75em;font-size:.5em;border:1.5px solid #222;border-radius:50%;margin:0 .45em;font-family:'Amiri Quran',serif;line-height:1;box-shadow:0 0 0 2px #faf8f4,0 0 0 3px #bbb}
+.mk.err{border-color:#c62828;color:#c62828}
+@keyframes pulse{50%{opacity:.35}}
+/* tajwid */
+.t-mn{color:#f08a00}.t-mj{color:#e0218a}.t-mw{color:#d3166f}.t-ml{color:#a8002f}
+.t-g{color:#1e9e4b}.t-q{color:#1e5bd8}.t-ik{color:#0e9aa7}.t-iq{color:#00b8d4}.t-sl{color:#b0b0b0}
+
+.strip{display:flex;align-items:center;gap:8px;padding:6px 12px;background:#faf8f4;border-top:1px solid #ebe8e1}
+.strip .st{flex:1;font-size:14.5px;color:#444;min-width:0}
+.strip .st b{color:#111}
+.sq{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+.sq svg{width:22px;height:22px}
+.sq.ok{background:#0d6a55;color:#fff}
+.sq.no{color:#c62828}
+.bar{display:flex;align-items:center;gap:6px;padding:8px 10px calc(14px + env(safe-area-inset-bottom,0px));background:#faf8f4}
+.pill{background:#fff;border-radius:99px;min-height:50px;padding:0 20px;font-weight:600;font-size:17px;display:flex;align-items:center;box-shadow:0 1px 5px rgba(0,0,0,.2);color:#111;flex:none}
+.pill.has{color:#c62828}
+.round{width:50px;height:50px;border-radius:50%;background:#fff;display:grid;place-items:center;box-shadow:0 1px 5px rgba(0,0,0,.2);color:#111;flex:none}
+.round svg{width:24px;height:24px}
+.round.sm{border:1.5px solid #888;box-shadow:none;background:transparent}
+.mic{margin-inline-start:auto;width:66px;height:66px;border-radius:50%;background:linear-gradient(135deg,#59dca8,#9be36b);display:grid;place-items:center;color:#fff;box-shadow:0 6px 18px rgba(60,200,140,.5);flex:none}
+.mic svg{width:32px;height:32px}
+.mic.live{animation:ring 1s infinite}
+@keyframes ring{0%{box-shadow:0 0 0 0 rgba(60,200,140,.6)}100%{box-shadow:0 0 0 20px rgba(60,200,140,0)}}
+@media (max-width:400px){
+  .round{width:42px;height:42px}.round svg{width:21px;height:21px}
+  .pill{padding:0 13px;font-size:15px;min-height:44px}
+  .mic{width:56px;height:56px}.mic svg{width:27px;height:27px}
+  .bar{gap:5px}
+}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(98px + env(safe-area-inset-bottom,0px));background:#16181a;color:#fff;padding:12px 18px;border-radius:10px;font-size:16px;z-index:60;max-width:90%;text-align:center;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.on{opacity:.96}
+
+/* ===== Overlays (menu, feuilles) ===== */
+#overlay{position:fixed;inset:0;z-index:30;display:none}
+#overlay.on{display:block}
+.backdrop{position:absolute;inset:0;background:rgba(5,20,15,.55)}
+.sheet{position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:480px;background:var(--card);color:var(--ink);border-radius:22px 22px 0 0;padding:20px 18px calc(22px + env(safe-area-inset-bottom,0px));max-height:90%;overflow:auto;animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+.drawer{position:absolute;left:0;top:0;bottom:0;width:min(90%,380px);background:var(--bg);color:var(--ink);overflow:auto;padding:calc(14px + env(safe-area-inset-top,0px)) 14px calc(24px + env(safe-area-inset-bottom,0px));animation:in .22s ease-out}
+@keyframes in{from{transform:translateX(-30px);opacity:0}to{transform:none;opacity:1}}
+.dh{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.dh b{font-size:24px}
+.iconbtn{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--card)}
+.iconbtn svg{width:22px;height:22px}
+h3{margin:0 0 4px;font-size:20px}
+h2{font-size:15px;margin:20px 2px 8px;font-weight:600}
+.sheet p{color:var(--mute);margin:4px 0 14px;font-size:14.5px}
+.alert{display:flex;gap:10px;background:var(--late-soft);color:var(--late);border:1.5px solid var(--late);border-radius:14px;padding:12px;margin:10px 0;font-size:14px}
+.alert b{display:block;font-size:15px}
+.alert span{color:var(--ink)}
+.p{background:var(--card);border-radius:16px;padding:13px;margin-bottom:10px;border-inline-start:5px solid var(--accent)}
+.p.late{border-inline-start-color:var(--late)}
+.p.due{border-inline-start-color:var(--due)}
+.p-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.p-title{font-weight:600;font-size:16.5px}
+.p-meta{color:var(--mute);font-size:13px}
+.chip{font-size:12.5px;font-weight:600;padding:4px 9px;border-radius:99px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.chip.late{background:var(--late-soft);color:var(--late)}
+.chip.due{background:var(--due-soft);color:var(--due)}
+.p-foot{display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:8px}
+.dots{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.dots i{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.dots i.on{background:var(--accent)}
+.dots small{margin-inline-start:6px;color:var(--mute);font-size:12.5px}
+.btn{background:var(--accent);color:var(--on-accent);font-weight:600;padding:10px 18px;border-radius:12px;min-height:44px}
+.btn.alt{background:var(--accent-soft);color:var(--accent)}
+.btn.ghost{background:transparent;color:var(--mute);padding:8px 10px;min-height:40px}
+.btn.late{background:var(--late);color:#fff}
+.btn.off{opacity:.45}
+.btn.wide{width:100%;margin-top:6px}
+.empty{background:var(--card);border:1.5px dashed var(--line);border-radius:16px;padding:20px;text-align:center;color:var(--mute)}
+details.demo{margin-top:18px;background:var(--card);border-radius:14px;padding:12px 14px}
+details.demo summary{font-weight:600;cursor:pointer}
+.demo-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.demo p{color:var(--mute);font-size:13.5px;margin:10px 0 0}
+label{display:block;font-weight:600;font-size:14px;margin:14px 0 6px}
+select{width:100%;font:inherit;padding:12px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);min-height:48px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.actions{display:flex;gap:10px;margin-top:20px}
+.actions .btn{flex:1}
+.res{text-align:center}
+.res .big{font-size:44px;font-weight:700;color:var(--accent);line-height:1.1}
+.errs{max-height:50vh;overflow:auto}
+.errs .e{padding:12px;border-radius:12px;background:var(--late-soft);margin-bottom:8px;direction:rtl;font-size:22px;line-height:1.9}
+.errs .e small{display:block;direction:ltr;font-family:'Figtree',sans-serif;color:var(--late);font-size:12.5px;font-weight:600}
+.pg{display:flex;justify-content:space-between;align-items:center;width:100%;padding:14px;border-radius:14px;background:var(--bg);margin-bottom:8px;text-align:left}
+.pg.on{outline:2px solid var(--accent)}
+.pg b{font-size:16.5px}.pg small{color:var(--mute);display:block;font-size:13px}
+.pg .ar{font-size:24px}
+.lg{display:flex;align-items:center;gap:12px;padding:8px 2px;border-bottom:1px solid var(--line);font-size:15px}
+.lg:last-child{border:0}
+.sw{width:30px;height:30px;border-radius:50%;flex:none;display:grid;place-items:center;font-family:'Amiri Quran',serif;font-size:20px;background:#faf8f4}
+.lg small{display:block;color:var(--mute);font-size:12.5px}
+.list-late{margin:10px 0 0;padding:0;list-style:none}
+.list-late li{display:flex;justify-content:space-between;padding:10px 12px;background:var(--late-soft);border-radius:10px;margin-bottom:6px;font-weight:600;color:var(--late)}
+.w.bad,.w.bad span{color:#c62828!important}
+input[type=search]{width:100%;font:inherit;padding:12px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);min-height:48px}
+#heard{font-family:'Amiri Quran',serif;font-size:19px;direction:rtl;unicode-bidi:plaintext}
+.pg small{font-size:12.5px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+#reader{overflow:hidden}
+.pagewrap{padding:4px 8px 4px;overflow:hidden}
+.pgbar{display:flex;align-items:center;justify-content:space-between;padding:0 12px;height:38px;background:#faf8f4;flex:none}
+.pgbar button{width:56px;height:34px;display:grid;place-items:center;border-radius:10px;color:#444}
+.pgbar button:disabled{opacity:.25}
+.pgbar svg{width:22px;height:22px}
+.pgbar .pn{width:auto;min-width:64px;padding:0 16px;background:#efede7;font-weight:700;font-size:16px;letter-spacing:.02em}
+.ln.hdr{justify-content:center;border:1.5px solid #c4ad6a;border-radius:8px;background:linear-gradient(#f7f0da,#efe5c3);color:#5a4a1d;font-size:.78em}
+.ln.bsm{justify-content:center}
+.ln.hdr,.ln.bsm{margin:0 4px}
+.strip .st{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+#heard{display:inline-block;max-width:calc(100% - 28px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom}
+.hdr+.ln,.ln{flex:none}
+</style>
+</head>
+<body>
+<div id="reader"></div>
+<div id="overlay"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>
+const SURAHS = [
+["Al-Fatiha","الفاتحة",7,1],["Al-Baqarah","البقرة",286,2],["Ali 'Imran","آل عمران",200,50],["An-Nisa","النساء",176,77],["Al-Ma'idah","المائدة",120,106],
+["Al-An'am","الأنعام",165,128],["Al-A'raf","الأعراف",206,151],["Al-Anfal","الأنفال",75,177],["At-Tawbah","التوبة",129,187],["Yunus","يونس",109,208],
+["Hud","هود",123,221],["Yusuf","يوسف",111,235],["Ar-Ra'd","الرعد",43,249],["Ibrahim","إبراهيم",52,255],["Al-Hijr","الحجر",99,262],
+["An-Nahl","النحل",128,267],["Al-Isra","الإسراء",111,282],["Al-Kahf","الكهف",110,293],["Maryam","مريم",98,305],["Ta-Ha","طه",135,312],
+["Al-Anbiya","الأنبياء",112,322],["Al-Hajj","الحج",78,332],["Al-Mu'minun","المؤمنون",118,342],["An-Nur","النور",64,350],["Al-Furqan","الفرقان",77,359],
+["Ash-Shu'ara","الشعراء",227,367],["An-Naml","النمل",93,377],["Al-Qasas","القصص",88,385],["Al-'Ankabut","العنكبوت",69,396],["Ar-Rum","الروم",60,404],
+["Luqman","لقمان",34,411],["As-Sajdah","السجدة",30,415],["Al-Ahzab","الأحزاب",73,418],["Saba","سبأ",54,428],["Fatir","فاطر",45,434],
+["Ya-Sin","يس",83,440],["As-Saffat","الصافات",182,446],["Sad","ص",88,453],["Az-Zumar","الزمر",75,458],["Ghafir","غافر",85,467],
+["Fussilat","فصلت",54,477],["Ash-Shura","الشورى",53,483],["Az-Zukhruf","الزخرف",89,489],["Ad-Dukhan","الدخان",59,496],["Al-Jathiyah","الجاثية",37,499],
+["Al-Ahqaf","الأحقاف",35,502],["Muhammad","محمد",38,507],["Al-Fath","الفتح",29,511],["Al-Hujurat","الحجرات",18,515],["Qaf","ق",45,518],
+["Adh-Dhariyat","الذاريات",60,520],["At-Tur","الطور",49,523],["An-Najm","النجم",62,526],["Al-Qamar","القمر",55,528],["Ar-Rahman","الرحمن",78,531],
+["Al-Waqi'ah","الواقعة",96,534],["Al-Hadid","الحديد",29,537],["Al-Mujadila","المجادلة",22,542],["Al-Hashr","الحشر",24,545],["Al-Mumtahanah","الممتحنة",13,549],
+["As-Saff","الصف",14,551],["Al-Jumu'ah","الجمعة",11,553],["Al-Munafiqun","المنافقون",11,554],["At-Taghabun","التغابن",18,556],["At-Talaq","الطلاق",12,558],
+["At-Tahrim","التحريم",12,560],["Al-Mulk","الملك",30,562],["Al-Qalam","القلم",52,564],["Al-Haqqah","الحاقة",52,566],["Al-Ma'arij","المعارج",44,568],
+["Nuh","نوح",28,570],["Al-Jinn","الجن",28,572],["Al-Muzzammil","المزمل",20,574],["Al-Muddaththir","المدثر",56,575],["Al-Qiyamah","القيامة",40,577],
+["Al-Insan","الإنسان",31,578],["Al-Mursalat","المرسلات",50,580],["An-Naba","النبأ",40,582],["An-Nazi'at","النازعات",46,583],["'Abasa","عبس",42,585],
+["At-Takwir","التكوير",29,586],["Al-Infitar","الانفطار",19,587],["Al-Mutaffifin","المطففين",36,587],["Al-Inshiqaq","الانشقاق",25,589],["Al-Buruj","البروج",22,590],
+["At-Tariq","الطارق",17,591],["Al-A'la","الأعلى",19,591],["Al-Ghashiyah","الغاشية",26,592],["Al-Fajr","الفجر",30,593],["Al-Balad","البلد",20,594],
+["Ash-Shams","الشمس",15,595],["Al-Layl","الليل",21,595],["Ad-Duha","الضحى",11,596],["Ash-Sharh","الشرح",8,596],["At-Tin","التين",8,597],
+["Al-'Alaq","العلق",19,597],["Al-Qadr","القدر",5,598],["Al-Bayyinah","البينة",8,598],["Az-Zalzalah","الزلزلة",8,599],["Al-'Adiyat","العاديات",11,599],
+["Al-Qari'ah","القارعة",11,600],["At-Takathur","التكاثر",8,600],["Al-'Asr","العصر",3,601],["Al-Humazah","الهمزة",9,601],["Al-Fil","الفيل",5,601],
+["Quraysh","قريش",4,602],["Al-Ma'un","الماعون",7,602],["Al-Kawthar","الكوثر",3,602],["Al-Kafirun","الكافرون",6,603],["An-Nasr","النصر",3,603],
+["Al-Masad","المسد",5,603],["Al-Ikhlas","الإخلاص",4,604],["Al-Falaq","الفلق",5,604],["An-Nas","الناس",6,604]
+];
+
+/* ============ Tajwid : analyse par règles (approximation) ============ */
+const MARK = /[\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E8\u06EA-\u06ED]/;
+const HARAKA = /[\u064B-\u0650]/, SUKUN = /[\u0652\u06E1]/, TANWEEN = /[\u064B\u064C\u064D]/;
+const HAMZA = 'ءأإؤئ';
+function clusters(w){
+  const out = [];
+  for (const ch of w){
+    if (MARK.test(ch) && out.length) out[out.length-1].s += ch;
+    else out.push({ s: ch });
+  }
+  out.forEach(c => { c.b = c.s[0]; c.m = c.s.slice(1); c.nob = MARK.test(c.b); });
+  return out;
+}
+const sakin = c => !HARAKA.test(c.m) && !/[\u0651\u0653\u0670\u06E5\u06E6]/.test(c.m);
+
+function tajweed(P){
+  const seq = []; let last = null;
+  P.lines.forEach(row => row.forEach(t => {
+    if (t.m){ if (last) last.end = true; }
+    else { t.c = clusters(t.w); t.end = false; seq.push(t); last = t; }
+  }));
+  const nx = (i,j) => {
+    const w = seq[i];
+    for (let k=j+1; k<w.c.length; k++) if (!w.c[k].nob) return { c:w.c[k], cross:false };
+    if (w.end) return null;
+    for (let k=i+1; k<seq.length; k++){
+      const x = seq[k].c.find(c => !c.nob);
+      if (x) return { c:x, cross:true };
+      if (seq[k].end) return null;
+    }
+    return null;
+  };
+  const madd = (i,j) => {
+    const w = seq[i], n = nx(i,j);
+    if (n && !n.cross && n.c.m.includes('\u0651')) return 't-ml';
+    if (n && !n.cross && HAMZA.includes(n.c.b)) return 't-mw';
+    if (n && n.cross && HAMZA.includes(n.c.b) && j >= w.c.length-1) return 't-mj';
+    return 't-mn';
+  };
+  seq.forEach((w,i) => {
+    w.c.forEach((c,j) => {
+      if (c.nob) return;
+      const prev = j>0 ? w.c[j-1] : null;
+      const n = nx(i,j);
+      let cls = null;
+      if (c.b === 'ٱ') cls = 't-sl';
+      else if (c.b==='ل' && c.m==='' && prev && prev.b==='ٱ' && n && !n.cross && n.c.m.includes('\u0651')) cls = 't-sl';
+      else if (c.b==='ا' && c.m.includes('\u06DF')) cls = 't-sl';
+      else if (c.m.includes('\u0653')) cls = madd(i,j);
+      else if (c.m.includes('\u0670') || /[\u06E5\u06E6]/.test(c.m)) cls = madd(i,j);
+      else if (c.b==='ا' && c.m==='' && prev && /\u064E/.test(prev.m)) cls = madd(i,j);
+      else if (c.b==='و' && c.m==='' && prev && /\u064F/.test(prev.m)) cls = madd(i,j);
+      else if ((c.b==='ي' || c.b==='ى') && c.m==='' && prev && /\u0650/.test(prev.m)) cls = madd(i,j);
+      else if ('قطبجد'.includes(c.b) && (SUKUN.test(c.m) || (w.end && j===w.c.length-1 && !HARAKA.test(c.m) && !c.m.includes('\u0651')))) cls = 't-q';
+      else if ((c.b==='ن' || c.b==='م') && c.m.includes('\u0651')) cls = 't-g';
+      else if ((c.b==='ن' && sakin(c)) || TANWEEN.test(c.m)){
+        if (n && n.c.b !== 'ٱ'){
+          const L = n.c.b;
+          if (L === 'ب') cls = 't-iq';
+          else if (n.cross && 'ينمولر'.includes(L)) cls = 't-g';
+          else if ('تثجدذزسشصضطظفقك'.includes(L)) cls = 't-ik';
+        }
+      }
+      else if (c.b==='م' && sakin(c) && n && n.cross){
+        if (n.c.b === 'ب') cls = 't-ik';
+        else if (n.c.b === 'م') cls = 't-g';
+      }
+      c.cls = cls;
+    });
+    w.h = w.c.map(c => c.cls ? `<span class="${c.cls}">${c.s}</span>` : c.s).join('');
+  });
+}
+
+
+/* ============ Icônes ============ */
+const I = {
+  menu:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>',
+  search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="10" cy="10" r="6.5"/><path d="m15 15 6 6"/></svg>',
+  gear:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.4 13a7.7 7.7 0 0 0 0-2l2-1.6a.5.5 0 0 0 .1-.6l-1.9-3.3a.5.5 0 0 0-.6-.2l-2.4 1a7.4 7.4 0 0 0-1.7-1l-.4-2.5a.5.5 0 0 0-.5-.4h-3.8a.5.5 0 0 0-.5.4l-.4 2.5a7.4 7.4 0 0 0-1.7 1l-2.4-1a.5.5 0 0 0-.6.2L2.5 8.8a.5.5 0 0 0 .1.6l2 1.6a7.700 7.700 0 0 0 0 2l-2 1.600a.5.5 0 0 0-.1.6l1.900 3.300a.5.5 0 0 0 .6.2l2.400-1c.5.400 1.100.7 1.700 1l.4 2.500a.5.5 0 0 0 .5.4h3.800a.5.5 0 0 0 .5-.4l.4-2.500c.6-.3 1.200-.6 1.700-1l2.400 1a.5.5 0 0 0 .6-.2l1.900-3.300a.5.5 0 0 0-.1-.6ZM12 15.500A3.500 3.500 0 1 1 12 8.500a3.500 3.500 0 0 1 0 7Z"/></svg>',
+  mark:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 3h10a1 1 0 0 1 1 1v17l-6-4-6 4V4a1 1 0 0 1 1-1Z"/></svg>',
+  book:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 6.500C10.500 5.300 8.400 4.700 5.500 4.700 4.300 4.700 3 5 2 5.400V19c1-.4 2.300-.700 3.500-.700 2.900 0 5 .6 6.500 1.800 1.500-1.200 3.600-1.800 6.500-1.800 1.200 0 2.500.3 3.500.7V5.400c-1-.4-2.300-.7-3.500-.7-2.900 0-5 .6-6.500 1.800Z"/></svg>',
+  eye:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.500-7 10-7 10 7 10 7-3.500 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>',
+  eyeoff:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M17.900 17.900A10 10 0 0 1 12 19C5.500 19 2 12 2 12a17 17 0 0 1 4.100-5M9.900 5.200A9 9 0 0 1 12 5c6.500 0 10 7 10 7a17 17 0 0 1-2.200 3.200M14.100 14.100a3 3 0 0 1-4.200-4.200M2 2l20 20"/></svg>',
+  fwd:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg>',
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg>',
+  first:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m12 5-7 7 7 7M19 5l-7 7 7 7"/></svg>',
+  mic:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 15a3.500 3.500 0 0 0 3.500-3.500v-6a3.500 3.500 0 0 0-7 0v6A3.500 3.500 0 0 0 12 15Zm6-3.500a1 1 0 1 0-2 0 4 4 0 0 1-8 0 1 1 0 1 0-2 0 6 6 0 0 0 5 5.920V20H9.500a1 1 0 1 0 0 2h5a1 1 0 1 0 0-2H13v-2.580A6 6 0 0 0 18 11.500Z"/></svg>',
+  spk:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.500 8.500a5 5 0 0 1 0 7M18.500 5.500a9 9 0 0 1 0 13"/></svg>',
+  ok:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.800" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.500 4.500 4.500L19 7.500"/></svg>',
+  no:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.800" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>'
+};
+
+
+/* ============ Stockage ============ */
+const lsGet = k => { try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } };
+const lsSet = (k,v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
+const $ = s => document.querySelector(s);
+const ad = n => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+const plural = (n,w) => n + ' ' + w + (n>1?'s':'');
+const fmt = t => new Date(t).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(toast.h); toast.h = setTimeout(()=>t.classList.remove('on'), 2600);
+}
+function openOverlay(html, cls){
+  const o = $('#overlay');
+  o.innerHTML = `<div class="backdrop" data-act="close"></div><div class="${cls||'sheet'}" role="dialog" aria-modal="true">${html}</div>`;
+  o.classList.add('on');
+}
+function closeOverlay(){ const o=$('#overlay'); o.classList.remove('on'); o.innerHTML=''; }
+
+/* ============ Page 524 hors ligne (démo) ============ */
+const B524 = [
+  'أَفَسِحْرٌ هَٰذَا أَمْ أَنتُمْ لَا تُبْصِرُونَ |15| ٱصْلَوْهَا فَٱصْبِرُوٓا۟',
+  'أَوْ لَا تَصْبِرُوا۟ سَوَآءٌ عَلَيْكُمْ ۖ إِنَّمَا تُجْزَوْنَ مَا كُنتُمْ تَعْمَلُونَ |16|',
+  'إِنَّ ٱلْمُتَّقِينَ فِى جَنَّـٰتٍ وَنَعِيمٍ |17| فَـٰكِهِينَ بِمَآ ءَاتَىٰهُمْ رَبُّهُمْ',
+  'وَوَقَىٰهُمْ رَبُّهُمْ عَذَابَ ٱلْجَحِيمِ |18| كُلُوا۟ وَٱشْرَبُوا۟ هَنِيٓـًٔۢا بِمَا',
+  'كُنتُمْ تَعْمَلُونَ |19| مُتَّكِـِٔينَ عَلَىٰ سُرُرٍ مَّصْفُوفَةٍ ۖ وَزَوَّجْنَـٰهُم',
+  'بِحُورٍ عِينٍ |20| وَٱلَّذِينَ ءَامَنُوا۟ وَٱتَّبَعَتْهُمْ ذُرِّيَّتُهُم بِإِيمَـٰنٍ أَلْحَقْنَا',
+  'بِهِمْ ذُرِّيَّتَهُمْ وَمَآ أَلَتْنَـٰهُم مِّنْ عَمَلِهِم مِّن شَىْءٍ ۚ كُلُّ ٱمْرِئٍۭ بِمَا كَسَبَ',
+  'رَهِينٌ |21| وَأَمْدَدْنَـٰهُم بِفَـٰكِهَةٍ وَلَحْمٍ مِّمَّا يَشْتَهُونَ |22| يَتَنَـٰزَعُونَ',
+  'فِيهَا كَأْسًا لَّا لَغْوٌ فِيهَا وَلَا تَأْثِيمٌ |23| وَيَطُوفُ عَلَيْهِمْ غِلْمَانٌ',
+  'لَّهُمْ كَأَنَّهُمْ لُؤْلُؤٌ مَّكْنُونٌ |24| وَأَقْبَلَ بَعْضُهُمْ عَلَىٰ بَعْضٍ يَتَسَآءَلُونَ',
+  '|25| قَالُوٓا۟ إِنَّا كُنَّا قَبْلُ فِىٓ أَهْلِنَا مُشْفِقِينَ |26| فَمَنَّ ٱللَّهُ',
+  'عَلَيْنَا وَوَقَىٰنَا عَذَابَ ٱلسَّمُومِ |27| إِنَّا كُنَّا مِن قَبْلُ',
+  'نَدْعُوهُ ۖ إِنَّهُۥ هُوَ ٱلْبَرُّ ٱلرَّحِيمُ |28| فَذَكِّرْ فَمَآ أَنتَ بِنِعْمَتِ',
+  'رَبِّكَ بِكَاهِنٍ وَلَا مَجْنُونٍ |29| أَمْ يَقُولُونَ شَاعِرٌ نَّتَرَبَّصُ بِهِۦ رَيْبَ',
+  'ٱلْمَنُونِ |30| قُلْ تَرَبَّصُوا۟ فَإِنِّى مَعَكُم مِّنَ ٱلْمُتَرَبِّصِينَ |31|'
+];
+function bundled524(){
+  const L = {}, cnt = {}; let pending = [];
+  B524.forEach((line, idx) => {
+    const row = [];
+    line.split(' ').forEach(w => {
+      const m = w.match(/^\|(\d+)\|$/);
+      if (m){
+        const n = +m[1], id = 52000+n;
+        pending.forEach(p => { p[1] = id; p[2] = (cnt[id] = (cnt[id]===undefined ? 0 : cnt[id]+1)); });
+        pending = []; row.push([null, id, n]);
+      } else { const t = [w, null, null]; pending.push(t); row.push(t); }
+    });
+    L[idx+1] = row;
+  });
+  return { j:27, h:53, c:52, L };
+}
+
+/* ============ Pages du mushaf (604 pages, 15 lignes) ============ */
+const PG = {}, VT = {};
+const PK = n => 'muraja3a-pg-'+n;
+function registerPage(n, d){
+  const maxLn = Math.max(15, ...Object.keys(d.L).map(Number));
+  const slots = [], rows = [], vids = new Set();
+  for (let ln=1; ln<=maxLn; ln++){
+    const raw = d.L[ln];
+    if (!raw){ slots.push({ kind:'empty' }); continue; }
+    const row = raw.map(r => r[0]===null ? { m:r[2], v:r[1] } : { w:r[0], v:r[1], i:r[2] });
+    row.forEach(t => { vids.add(t.v); if (t.w) (VT[t.v] = VT[t.v]||[])[t.i] = t.w; });
+    slots.push({ kind:'text', row }); rows.push(row);
+  }
+  /* bandeau de sourate et basmala avant le verset 1 */
+  slots.forEach((sl, idx) => {
+    if (sl.kind !== 'text') return;
+    const t = sl.row.find(x => x.w && x.i===0 && x.v%1000===1); if (!t) return;
+    const ch = Math.floor(t.v/1000), p1 = slots[idx-1], p2 = slots[idx-2];
+    if (ch===1 || ch===9){ if (p1 && p1.kind==='empty') slots[idx-1] = { kind:'hdr', ch }; }
+    else if (p1 && p1.kind==='empty' && p2 && p2.kind==='empty'){ slots[idx-2] = { kind:'hdr', ch }; slots[idx-1] = { kind:'bsm' }; }
+    else if (p1 && p1.kind==='empty'){ slots[idx-1] = { kind:'hdr', ch }; }
+  });
+  const P = { n, juz:d.j, hizb:d.h, c:d.c, slots, lines:rows, vids:[...vids].sort((a,b)=>a-b) };
+  tajweed(P); PG[n] = P; return P;
+}
+function flatToLines(flat){
+  const len = r => r[0] ? r[0].replace(/[\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g,'').length+1 : 3;
+  const total = flat.reduce((a,r)=>a+len(r),0), L = {}; let acc = 0, ln = 1;
+  flat.forEach(r => { L[ln] = L[ln]||[]; L[ln].push(r); acc += len(r); if (acc >= total/15*ln && ln<15) ln++; });
+  return L;
+}
+async function fetchPage(n){
+  const flat = []; let d = { j:null, h:null, c:null, L:{} }, allLn = true, page = 1;
+  for (;;){
+    const r = await fetch(`https://api.quran.com/api/v4/verses/by_page/${n}?words=true&word_fields=text_uthmani&mushaf=1&per_page=50&page=${page}`);
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    const j = await r.json();
+    j.verses.forEach(v => {
+      const kp = v.verse_key.split(':').map(Number), id = kp[0]*1000+kp[1];
+      if (d.j === null){ d.j = v.juz_number; d.h = v.hizb_number; d.c = kp[0]; }
+      v.words.forEach(w => {
+        let raw = null;
+        if (w.char_type_name === 'end') raw = [null, id, kp[1]];
+        else if (w.char_type_name === 'word' || w.char_type_name === 'pause'){ const tx = w.text_uthmani || w.text; if (tx) raw = [tx, id, (w.position||1)-1]; }
+        if (!raw) return;
+        flat.push(raw);
+        if (w.line_number == null) allLn = false;
+        else (d.L[w.line_number] = d.L[w.line_number]||[]).push(raw);
+      });
+    });
+    const nx = j.pagination && j.pagination.next_page; if (!nx) break; page = nx;
+  }
+  if (!flat.length) throw new Error('page vide');
+  if (!allLn || !Object.keys(d.L).length) d.L = flatToLines(flat);
+  return d;
+}
+async function ensurePage(n){
+  if (PG[n]) return PG[n];
+  let d = lsGet(PK(n));
+  if (!d){
+    try { d = await fetchPage(n); lsSet(PK(n), d); }
+    catch(e){ if (n === 524) d = bundled524(); else throw e; }
+  }
+  return registerPage(n, d);
+}
+const prefetch = n => { if (n>=1 && n<=604 && !PG[n]) ensurePage(n).catch(()=>{}); };
+async function verseToPage(s, a){
+  if (a === 1) return SURAHS[s-1][3];
+  if (s === 52 && a >= 15 && a <= 31) return 524;
+  const k = 'muraja3a-vp-'+s+':'+a, c = lsGet(k); if (c) return c;
+  try {
+    const r = await fetch(`https://api.quran.com/api/v4/verses/by_key/${s}:${a}`);
+    const j = await r.json(); const pn = j.verse.page_number; lsSet(k, pn); return pn;
+  } catch(e){ return SURAHS[s-1][3]; }
+}
+const verseText = v => (VT[v]||[]).filter(Boolean).join(' ');
+
+/* ============ État ============ */
+const DAY = 86400000, INTERVALS = [1,3,7,14,30];
+const KEY = 'muraja3a-proto-v3';
+const OLDKEYS = { fatiha:1, tur:52, ikhlas:112, falaq:113, nas:114 };
+function load(){
+  const s = lsGet(KEY); if (s && s.passages) return s;
+  const o = lsGet('muraja3a-proto-v2'), n = Date.now();
+  if (o && o.passages) return { off:o.off||0, dir:'right', last:524, alias:{}, passages:o.passages.map(p => ({ id:p.id, s:p.s || OLDKEYS[p.key] || +String(p.key).slice(1), from:p.from, to:p.to, last:p.last, stage:p.stage })) };
+  return { off:0, dir:'right', last:524, alias:{}, passages:[
+    { id:'a1', s:1, from:1, to:7, last:n-4*DAY, stage:0 },
+    { id:'a2', s:52, from:15, to:31, last:n, stage:0 },
+    { id:'a3', s:112, from:1, to:4, last:n-2*DAY, stage:1 }
+  ]};
+}
+let S = load();
+const save = () => lsSet(KEY, S);
+const now = () => Date.now() + S.off*DAY;
+const sod = t => new Date(t).setHours(0,0,0,0);
+function status(p){
+  const due = sod(p.last) + INTERVALS[Math.min(p.stage,4)]*DAY;
+  return { due, diff: Math.round((sod(now()) - due)/DAY) };
+}
+const lateList = () => S.passages.filter(p => status(p).diff >= 1).sort((a,b)=>status(b).diff-status(a).diff);
+
+function newR(){
+  return { page:524, hidden:false, p:null, vlist:[], vset:new Set(), revealed:new Set(), errors:new Set(), bad:new Set(), shown:new Set(), live:false, heard:'', finishing:false, vkey:0 };
+}
+let R = newR();
+function resetSets(){ R.revealed.clear(); R.errors.clear(); R.bad.clear(); R.shown.clear(); R.finishing = false; R.vkey++; }
+function freeSession(){
+  const pg = PG[R.page]; R.p = null; R.vlist = pg.vids.slice(); R.vset = new Set(R.vlist); resetSets();
+}
+function passageSession(p){
+  R.p = p; R.vlist = []; for (let v=p.from; v<=p.to; v++) R.vlist.push(p.s*1000+v);
+  R.vset = new Set(R.vlist); resetSets();
+}
+const curVerse = () => R.hidden ? R.vlist.find(v => !R.revealed.has(v)) : undefined;
+
+
+/* ============ Lecteur ============ */
+function stripHTML(){
+  const cur = curVerse(); if (!cur) return '';
+  const words = (R.heard||'').split(' ').filter(Boolean).slice(-6).join(' ');
+  return `<div class="st">${R.live ? `🎙 <span id="heard">${words || 'J’écoute…'}</span>` : `Ayah <b>${cur%1000}</b> · ${SURAHS[Math.floor(cur/1000)-1][0]}`}</div>
+    <button class="sq" data-act="audio" aria-label="Écouter l'ayah">${I.spk}</button>
+    <button class="sq no" data-act="wrong" aria-label="Faux">${I.no}</button>
+    <button class="sq ok" data-act="right" aria-label="Juste">${I.ok}</button>`;
+}
+function slotHTML(sl, cur){
+  if (sl.kind === 'hdr') return `<div class="ln hdr ar">سُورَةُ ${SURAHS[sl.ch-1][1]}</div>`;
+  if (sl.kind === 'bsm') return `<div class="ln bsm ar">بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</div>`;
+  if (sl.kind === 'empty') return `<div class="ln emp"></div>`;
+  const anyHid = R.hidden && sl.row.some(t => t.w && R.vset.has(t.v) && !R.revealed.has(t.v) && !R.shown.has(t.v+':'+t.i));
+  let h = `<div class="ln t j ${anyHid?'hl':''}">`;
+  sl.row.forEach(t => {
+    if (t.m){ h += `<span class="mk ${R.errors.has(t.v)?'err':''}" data-mv="${t.v}">${ad(t.m)}</span>`; return; }
+    const k = t.v+':'+t.i, rng = R.vset.has(t.v);
+    const hid = R.hidden && rng && !R.revealed.has(t.v) && !R.shown.has(k);
+    const bad = R.bad.has(k);
+    const cls = 'w' + (hid ? ' hid'+(t.v===cur?' cur':'') : '') + (bad ? ' bad' : '') + (R.errors.has(t.v) && R.hidden && !bad ? ' err' : '');
+    h += `<span class="${cls}" ${rng?`data-k="${k}" data-v="${t.v}"`:''} ${hid?'data-act="peek"':''}>${t.h}</span>`;
+  });
+  return h + '</div>';
+}
+function draw(){
+  const P = PG[R.page]; if (!P) return;
+  const cur = curVerse(), late = lateList(), nErr = R.errors.size;
+  const nextLeft = S.dir === 'right';
+  const navBtn = (side) => {
+    const isNext = (side === 'left') === nextLeft;
+    const dis = isNext ? R.page>=604 : R.page<=1;
+    return `<button data-act="${isNext?'pnext':'pprev'}" ${dis?'disabled':''} aria-label="${isNext?'Page suivante':'Page précédente'}">${side==='left'?I.back:I.fwd}</button>`;
+  };
+  $('#reader').innerHTML = `
+    <div class="hd">
+      <button class="hb" data-act="menu" aria-label="Menu">${I.menu}</button>
+      <button class="tb" data-act="pages" aria-label="Choisir une page"><span><b>${SURAHS[(P.c||1)-1][0]}</b><small>Page ${P.n} | Juz ${P.juz} | Hizb ${P.hizb}</small></span>${I.mark}</button>
+      <button class="hb" data-act="search" aria-label="Rechercher">${I.search}</button>
+      <button class="hb" data-act="gear" aria-label="Réglages">${I.gear}</button>
+    </div>
+    ${late.length ? `<div class="lbar" role="alert"><span>⏰ ${plural(late.length,'passage')} en retard</span><button data-act="review" data-id="${late[0].id}">Réviser</button></div>` : ''}
+    <div class="pagewrap"><div id="mush" class="ar">${P.slots.map(sl => slotHTML(sl, cur)).join('')}</div></div>
+    <div class="pgbar">${navBtn('left')}<button class="pn" data-act="pages" aria-label="Aller à une page">${P.n}</button>${navBtn('right')}</div>
+    <div class="strip" id="strip" style="${cur?'':'display:none'}">${stripHTML()}</div>
+    <div class="bar">
+      <button class="pill ${nErr?'has':''}" id="errpill" data-act="errs">Erreurs${nErr?' '+nErr:''}</button>
+      <button class="round" data-act="pages" aria-label="Choisir une page">${I.book}</button>
+      <button class="round" data-act="eye" aria-label="Versets cachés">${R.hidden?I.eyeoff:I.eye}</button>
+      ${R.hidden ? `<button class="round sm" data-act="back" aria-label="Ayah précédente">${I.back}</button><button class="round sm" data-act="restart" aria-label="Recommencer">${I.first}</button>` : ''}
+      <button class="mic ${R.live?'live':''}" id="micbtn" data-act="mic" aria-label="${R.live?'Arrêter le micro':'Réciter au micro'}">${I.mic}</button>
+    </div>`;
+  fit();
+  checkDone();
+}
+function fit(){
+  const wrap = $('.pagewrap'), el = $('#mush'); if (!el) return;
+  const slots = [...el.children], n = slots.length, texts = slots.filter(l => l.classList.contains('t'));
+  const avail = Math.max(200, wrap.clientHeight - 12), rowH = avail/n;
+  let fs = Math.min(34, rowH/1.8);
+  el.style.fontSize = fs+'px'; slots.forEach(l => l.style.height = rowH+'px');
+  const over = l => l.scrollWidth > l.clientWidth+1;
+  let worst = 1; texts.forEach(l => { if (over(l)) worst = Math.min(worst, l.clientWidth/l.scrollWidth); });
+  if (worst < 1){ fs = Math.max(10, Math.floor(fs*worst*.98*2)/2); el.style.fontSize = fs+'px'; }
+  let g = 0; while (g++ < 10 && fs > 10 && texts.some(over)){ fs -= .5; el.style.fontSize = fs+'px'; }
+  /* ligne courte (fin de sourate) : centrée plutôt qu'étirée */
+  texts.forEach(l => {
+    let w = 0; [...l.children].forEach(c => w += c.offsetWidth + fs*.3);
+    if (w < l.clientWidth*.8){ l.classList.remove('j'); l.classList.add('c'); }
+  });
+}
+window.addEventListener('resize', () => { if (PG[R.page]) fit(); });
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (PG[R.page]) fit(); });
+
+function checkDone(){
+  if (R.hidden && !curVerse() && R.revealed.size && !R.finishing){ R.finishing = true; setTimeout(showResult, 450); }
+}
+function syncChrome(){
+  const st = $('#strip'); if (st){ const h = stripHTML(); st.style.display = h ? '' : 'none'; st.innerHTML = h; }
+  const pill = $('#errpill'); if (pill){ const n = R.errors.size; pill.textContent = 'Erreurs'+(n?' '+n:''); pill.classList.toggle('has', !!n); }
+  const mic = $('#micbtn'); if (mic){ mic.classList.toggle('live', !!R.live); mic.setAttribute('aria-label', R.live ? 'Arrêter le micro' : 'Réciter au micro'); }
+}
+function refresh(){
+  const cur = curVerse();
+  document.querySelectorAll('.w[data-k]').forEach(el => {
+    const v = +el.dataset.v, k = el.dataset.k;
+    const hid = R.hidden && !R.revealed.has(v) && !R.shown.has(k);
+    const bad = R.bad.has(k);
+    el.className = 'w' + (hid ? ' hid'+(v===cur?' cur':'') : '') + (bad ? ' bad' : '') + (R.errors.has(v) && R.hidden && !bad ? ' err' : '');
+    if (hid) el.setAttribute('data-act','peek'); else el.removeAttribute('data-act');
+  });
+  document.querySelectorAll('.mk[data-mv]').forEach(el => el.classList.toggle('err', R.errors.has(+el.dataset.mv)));
+  document.querySelectorAll('.ln.t').forEach(l => l.classList.toggle('hl', !!l.querySelector('.hid')));
+  syncChrome(); checkDone(); maybeAdvance();
+}
+/* En révision d'un passage : quand la page est terminée, on tourne la page */
+function maybeAdvance(){
+  if (!R.hidden || !R.p || R.advancing) return;
+  const cur = curVerse(), pg = PG[R.page]; if (!cur || !pg || R.page >= 604) return;
+  if (cur < pg.vids[0]) return;
+  let left = false;
+  pg.lines.forEach(row => row.forEach(t => { if (t.w && R.vset.has(t.v) && !R.revealed.has(t.v) && !R.shown.has(t.v+':'+t.i)) left = true; }));
+  if (left) return;
+  R.advancing = true;
+  setTimeout(async () => { await go(R.page+1, -1); R.advancing = false; }, 400);
+}
+
+/* ============ Navigation entre pages ============ */
+async function go(n, sign){
+  n = Math.max(1, Math.min(604, n)); if (n === R.page) return;
+  try { await ensurePage(n); } catch(e){ toast('Page '+n+' indisponible hors ligne.'); return; }
+  R.page = n; S.last = n; save();
+  if (R.hidden && !R.p) freeSession();
+  draw();
+  const m = $('#mush');
+  if (m && m.animate && sign) m.animate([{ transform:`translateX(${-sign*40}px)`, opacity:.2 }, { transform:'none', opacity:1 }], { duration:180, easing:'ease-out' });
+  prefetch(n+1); prefetch(n-1);
+}
+let tx = 0, ty = 0, tOn = false;
+document.addEventListener('touchstart', e => {
+  if (e.target.closest && e.target.closest('.pagewrap')){ tx = e.touches[0].clientX; ty = e.touches[0].clientY; tOn = true; } else tOn = false;
+}, { passive:true });
+document.addEventListener('touchend', e => {
+  if (!tOn) return; tOn = false;
+  const t = e.changedTouches[0], dx = t.clientX-tx, dy = t.clientY-ty;
+  if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)*1.6){
+    const next = S.dir === 'right' ? dx > 0 : dx < 0;
+    go(R.page + (next?1:-1), dx > 0 ? 1 : -1);
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || !PG[R.page]) return;
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight'){
+    const dx = e.key === 'ArrowRight' ? 1 : -1, next = S.dir === 'right' ? dx > 0 : dx < 0;
+    go(R.page + (next?1:-1), dx);
+  }
+});
+
+/* ============ Récitation ============ */
+function mark(ok, msg){
+  const v = curVerse(); if (!v) return;
+  if (ok) learnAlias(v);
+  R.revealed.add(v); if (!ok) R.errors.add(v);
+  refresh(); if (msg) toast(msg);
+}
+function normAr(s){
+  return s.replace(/ى\u0670/g,'ا').replace(/[\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g,'').replace(/[أإآٱ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/ؤ/g,'و').replace(/ئ/g,'ي').replace(/ء/g,'').replace(/[^\u0621-\u064A\s]/g,' ').replace(/\s+/g,' ').trim();
+}
+function lev(a,b){
+  const m=a.length, n=b.length; if(!m) return n; if(!n) return m;
+  let prev = Array.from({length:n+1},(_,j)=>j);
+  for (let i=1;i<=m;i++){ const cur=[i]; for (let j=1;j<=n;j++) cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1)); prev=cur; }
+  return prev[n];
+}
+const skel = w => w.replace(/[اويى]/g,'');
+function similar(a, b){            /* a = mot attendu, b = mot entendu */
+  if (a === b) return true;
+  if (S.alias && S.alias[b] === a) return true;
+  const sa = skel(a), sb = skel(b);
+  if (sa.length >= 2 && sa === sb) return true;
+  const L = Math.max(a.length, b.length); if (L <= 3) return false;
+  return lev(a,b) <= (L>=7 ? 2 : 1);
+}
+function expAll(){
+  const id = R.vkey+':'+Object.keys(PG).length;
+  if (R.exp && R.expId === id) return R.exp;
+  const out = [], vs = {}, ve = {};
+  Object.keys(PG).map(Number).sort((a,b)=>a-b).forEach(n => PG[n].lines.forEach(row => row.forEach(t => {
+    if (t.w && R.vset.has(t.v)){
+      const nn = normAr(t.w);
+      if (nn){ if (vs[t.v] === undefined) vs[t.v] = out.length; out.push({ v:t.v, i:t.i, n:nn }); ve[t.v] = out.length-1; }
+    }
+  })));
+  R.exp = out; R.vstart = vs; R.vend = ve; R.expId = id; return out;
+}
+function align(exp, said){
+  let ptr = 0; const res = new Array(exp.length).fill(null), sm = new Array(said.length).fill(-1);
+  said.forEach((t, si) => {
+    let f = -1; const lim = Math.min(exp.length, ptr+5);
+    for (let k=ptr; k<lim; k++){ if (similar(exp[k].n, t)){ f = k; break; } }
+    if (f >= 0){ for (let k=ptr;k<f;k++) res[k] = false; res[f] = true; sm[si] = f; ptr = f+1; }
+  });
+  return { ptr, res, sm };
+}
+/* Cherche où tu en es dans le passage, même si tu sautes une ayah */
+function findBest(exp, said, cursor){
+  const variants = [said]; if (said.length >= 3) variants.push(said.slice(1));
+  let best = null; const lo = Math.max(0, cursor-3), hi = Math.min(exp.length, cursor+400);
+  variants.forEach(sv => {
+    for (let a=lo; a<hi; a++){
+      if (R.revealed.has(exp[a].v) || !similar(exp[a].n, sv[0])) continue;
+      const slice = exp.slice(a, a+sv.length+8), r = align(slice, sv);
+      let m = 0, sk = 0;
+      for (let k=0;k<r.ptr;k++){ if (r.res[k]===true) m++; else if (r.res[k]===false) sk++; }
+      const prox = a <= cursor+4 ? 1 : -Math.min(1.5, (a-cursor)/150);
+      const score = m - .5*sk + prox;
+      if (!best || score > best.score) best = { a, slice, r, m, score, said:sv, near: a <= cursor+4 };
+    }
+  });
+  return best;
+}
+function evalSpeech(hyps){
+  R.heard = hyps[0] || '';
+  const h = $('#heard'); if (h) h.textContent = R.heard.split(' ').filter(Boolean).slice(-6).join(' ') || 'J’écoute…';
+  const exp = expAll(); if (!exp.length) return;
+  let cursor = exp.findIndex(x => !R.revealed.has(x.v) && !R.shown.has(x.v+':'+x.i)); if (cursor < 0) return;
+  let best = null;
+  hyps.forEach(t => {
+    const said = normAr(t).split(' ').filter(Boolean); if (!said.length) return;
+    const c = findBest(exp, said, cursor);
+    if (c && (!best || c.score > best.score)) best = c;
+  });
+  if (!best) return;
+  R.lastSaid = best.said;
+  if (best.said.length <= 1 && !best.near) return;
+  if (best.m < (best.said.length<=1 ? 1 : 2) || best.m < best.said.length*.35) return;
+  const { slice, r, a } = best;
+  for (let k=0;k<r.ptr;k++){
+    const key = slice[k].v+':'+slice[k].i;
+    R.shown.add(key);
+    if (r.res[k] === false) R.bad.add(key); else R.bad.delete(key);
+  }
+  const done = []; let wrong = 0;
+  const complete = (u, force) => {
+    if (R.revealed.has(u) || R.vstart[u] === undefined) return;
+    let n = 0, sh = 0, bd = 0;
+    for (let k=R.vstart[u]; k<=R.vend[u]; k++){ n++; const key = exp[k].v+':'+exp[k].i; if (R.shown.has(key)) sh++; if (R.bad.has(key)) bd++; }
+    if (sh === n || (force && sh >= n*.6)){
+      if (sh < n){ for (let k=R.vstart[u]; k<=R.vend[u]; k++){ const key = exp[k].v+':'+exp[k].i; if (!R.shown.has(key)){ R.shown.add(key); R.bad.add(key); bd++; } } }
+      R.revealed.add(u); done.push(u%1000);
+      if (bd >= Math.max(1, Math.ceil(n*.2))){ R.errors.add(u); wrong++; }
+    }
+  };
+  [...new Set(slice.slice(0, r.ptr).map(x => x.v))].forEach(u => complete(u, false));
+  const first = exp[a].v;
+  R.vlist.forEach(u => { if (u < first) complete(u, true); });
+  refresh();
+  if (done.length) toast('Ayah '+done.join(', ')+(wrong ? ' : erreurs en rouge' : ' ✓'));
+}
+/* Apprentissage de ta voix : quand tu valides une ayah, l'app retient comment tu prononces les mots mal compris */
+function learnAlias(v){
+  try {
+    if (!R.lastSaid || !R.exp || R.vstart[v] === undefined) return;
+    const ex = R.exp.slice(R.vstart[v], R.vend[v]+1), r = align(ex, R.lastSaid);
+    const matched = r.sm.filter(i => i >= 0).length;
+    if (matched < 2 || matched < R.lastSaid.length*.5) return;      /* l'ayah validée doit correspondre à ce qui a été entendu */
+    const eu = ex.filter((x,k) => r.res[k] !== true), su = R.lastSaid.filter((w,i) => r.sm[i] < 0);
+    if (eu.length && eu.length === su.length && eu.length <= 2){
+      S.alias = S.alias || {};
+      eu.forEach((x,k) => { if (lev(x.n, su[k]) <= 4 && Object.keys(S.alias).length < 400) S.alias[su[k]] = x.n; });
+      save();
+    }
+  } catch(e){}
+}
+function joinAlts(rs){
+  const last = rs[rs.length-1], out = [];
+  for (let k=0;k<last.length;k++){ const t = (last[k].transcript||'').trim(); if (t) out.push(t); }
+  return out;
+}
+async function listen(){
+  if (R.live){ stopMic(); return; }
+  if (!R.hidden){ R.hidden = true; if (R.p) passageSession(R.p); else freeSession(); draw(); }
+  if (!curVerse()) return;
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR){ micDiag(); return; }
+  try {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
+      const st = await navigator.mediaDevices.getUserMedia({ audio:true });
+      st.getTracks().forEach(t => t.stop());
+    }
+  } catch(e){ micDiag(); return; }
+  R.noSpeech = 0; R.live = true; syncChrome(); startRec();
+}
+function startRec(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!curVerse()){ R.live = false; syncChrome(); return; }
+  R.heard = '';
+  let rec;
+  try { rec = new SR(); } catch(e){ R.live = false; syncChrome(); micDiag(); return; }
+  R.rec = rec; rec.lang = 'ar-SA'; rec.continuous = false; rec.interimResults = true; rec.maxAlternatives = 5;
+  rec.onresult = e => { R.noSpeech = 0; const alts = joinAlts(e.results); if (alts.length) evalSpeech(alts); };
+  rec.onerror = e => {
+    if (e.error === 'no-speech'){ R.noSpeech = (R.noSpeech||0)+1; if (R.noSpeech >= 3){ R.live = false; syncChrome(); toast('Aucune voix détectée. Micro arrêté.'); } return; }
+    if (e.error === 'aborted') return;
+    R.live = false; syncChrome();
+    if (e.error === 'network') toast('La reconnaissance vocale a besoin d’internet.');
+    else if (e.error === 'language-not-supported') toast('Arabe non pris en charge sur cet appareil.');
+    else micDiag();
+  };
+  rec.onend = () => { if (R && R.live) setTimeout(() => { if (R && R.live){ try { startRec(); } catch(e){ R.live = false; syncChrome(); } } }, 120); };
+  try { rec.start(); syncChrome(); } catch(e){ R.live = false; syncChrome(); micDiag(); }
+}
+function stopMic(){
+  R.live = false;
+  try { R.rec && R.rec.stop(); } catch(e){}
+  syncChrome();
+}
+function micDiag(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const ua = navigator.userAgent || '';
+  let inFrame = true; try { inFrame = window.self !== window.top; } catch(e){}
+  const wv = /; wv\)|WebView/i.test(ua);
+  const row = (ok,t,sub) => `<div class="lg"><span class="sw" style="color:${ok?'#1e9e4b':'#c62828'}">${ok?'✓':'✗'}</span><span>${t}<small>${sub}</small></span></div>`;
+  const gum = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  openOverlay(`<h3>Diagnostic du micro</h3><p>La récitation utilise la reconnaissance vocale du navigateur.</p>
+    ${row(!!SR,'Reconnaissance vocale', SR ? 'Disponible' : 'Absente. Elle manque sur Safari, Firefox et dans les applications (WebView). Utilise Chrome.')}
+    ${row(!inFrame,'Page ouverte seule', inFrame ? 'Elle est dans un cadre (aperçu) : le micro y est le plus souvent bloqué.' : 'Oui')}
+    ${row(!wv,'Navigateur complet', wv ? 'WebView détectée : ouvre le lien dans Chrome.' : 'Oui')}
+    ${row(!!window.isSecureContext,'Connexion sécurisée', window.isSecureContext ? 'Oui' : 'Non : le micro exige https.')}
+    ${row(gum,'Accès au micro', gum ? 'Disponible' : 'Indisponible dans ce contexte')}
+    <div id="perm"></div>
+    <div class="actions"><button class="btn alt" data-act="close">Fermer</button><button class="btn" data-act="nettest">Tester Quran.com</button></div>`);
+  if (navigator.permissions && navigator.permissions.query){
+    navigator.permissions.query({ name:'microphone' }).then(r => {
+      const p = $('#perm'); if (!p) return;
+      p.innerHTML = row(r.state==='granted','Autorisation du micro', r.state==='granted' ? 'Accordée' : r.state==='denied' ? 'Refusée : réactive-la dans les réglages du site.' : 'Pas encore demandée');
+    }).catch(()=>{});
+  }
+}
+
+function playAudio(){
+  const v = curVerse(); if (!v) return;
+  R.revealed.add(v); R.errors.add(v); refresh();
+  toast('Ayah '+(v%1000)+' écoutée, comptée dans Erreurs');
+  try {
+    if (!('speechSynthesis' in window)) throw 0;
+    const u = new SpeechSynthesisUtterance(verseText(v)); u.lang='ar-SA'; u.rate=.8;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  } catch(e){ setTimeout(()=>toast('Aperçu sans voix. L’app lira un récitateur.'),1800); }
+}
+function errsSheet(){
+  const list = [...R.errors].sort((a,b)=>a-b);
+  openOverlay(`<h3>Erreurs</h3><p>${list.length?'Ces ayahs reviendront plus vite dans ton planning.':'Aucune erreur pour l’instant.'}</p>
+    <div class="errs ar">${list.map(v=>`<div class="e"><small>${SURAHS[Math.floor(v/1000)-1][0]} · ayah ${v%1000}</small>${verseText(v)} <span style="font-size:.6em">﴿${ad(v%1000)}﴾</span></div>`).join('')}</div>
+    <div class="actions"><button class="btn alt" data-act="close">Fermer</button></div>`);
+}
+function showResult(){
+  if (!R || !R.hidden) return;
+  const total = R.vlist.length, e = R.errors.size, ok = total-e, pct = Math.round(ok/total*100);
+  if (R.p){
+    const next = e===0 ? Math.min(R.p.stage+1,4) : (e/total<=.2 ? R.p.stage : Math.max(R.p.stage-1,0));
+    const msg = e===0 ? 'Parfait. L’intervalle s’allonge.' : (e/total<=.2 ? 'Bien. Même intervalle, une ayah à retravailler.' : 'À consolider. L’intervalle raccourcit.');
+    openOverlay(`<div class="res"><div class="big">${pct} %</div><h3 style="margin-top:6px">${ok} ayah${ok>1?'s':''} sur ${total} sans aide</h3><p>${msg}<br>Prochaine révision dans <b>${plural(INTERVALS[next],'jour')}</b>.</p></div>
+      <div class="actions">${e?'<button class="btn alt" data-act="errs">Voir les erreurs</button>':''}<button class="btn" data-act="finish" data-next="${next}">Terminer</button></div>`);
+  } else {
+    openOverlay(`<div class="res"><div class="big">${pct} %</div><h3 style="margin-top:6px">${ok} ayah${ok>1?'s':''} sur ${total} sans aide</h3><p>Veux-tu suivre cette page dans ton planning de révision ?</p></div>
+      <div class="actions"><button class="btn alt" data-act="close">Non merci</button><button class="btn" data-act="addplan">Ajouter au planning</button></div>`);
+  }
+}
+
+/* ============ Menu : planning ============ */
+function drawer(){
+  const late = lateList();
+  const total = S.passages.reduce((a,p)=>a+(p.to-p.from+1),0);
+  const sorted = [...S.passages].sort((a,b)=>status(b).diff-status(a).diff);
+  let h = `<div class="dh"><b>Muraja'a</b><button class="iconbtn" data-act="close" aria-label="Fermer">${I.x}</button></div>
+    <div style="color:var(--mute);font-size:14px">${new Date(now()).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})} · ${plural(total,'ayah')} suivie${total>1?'s':''}</div>`;
+  if (late.length) h += `<div class="alert"><div style="font-size:20px">⏰</div><div><b>${plural(late.length,'passage')} en retard</b><span>Révise-le${late.length>1?'s':''} pour débloquer l'ajout de nouvelles sourates.</span></div></div>`;
+  h += `<h2>Mes révisions</h2>`;
+  if (!sorted.length) h += `<div class="empty">Aucun passage.<br>Ajoute ce que tu as appris.</div>`;
+  sorted.forEach(p => {
+    const M = SURAHS[p.s-1], s = status(p);
+    const cls = s.diff>=1 ? 'late' : s.diff===0 ? 'due' : '';
+    const chip = s.diff>=1 ? `En retard de ${plural(s.diff,'jour')}` : s.diff===0 ? "À réviser aujourd'hui" : `Dans ${plural(-s.diff,'jour')}`;
+    const range = p.from===p.to ? `ayah ${p.from}` : `ayahs ${p.from}–${p.to}`;
+    h += `<div class="p ${cls}"><div class="p-head"><div><div class="p-title">${M[0]} <span class="ar" style="font-size:19px">${M[1]}</span></div><div class="p-meta">${range}</div></div><span class="chip ${cls}">${chip}</span></div>
+      <div class="p-foot"><div class="dots">${INTERVALS.map((_,i)=>`<i class="${i<p.stage?'on':''}"></i>`).join('')}<small>${fmt(s.due)}</small></div>
+      <div style="display:flex;gap:2px"><button class="btn ghost" data-act="del" data-id="${p.id}" aria-label="Supprimer ${M[0]}">✕</button><button class="btn ${s.diff>=1?'late':''}" data-act="review" data-id="${p.id}">Réviser</button></div></div></div>`;
+  });
+  h += `<button class="btn wide ${late.length?'off':''}" data-act="add">＋ J'ai appris du nouveau</button>
+    <button class="btn alt wide" data-act="legend">Légende du tajwid</button>
+    <button class="btn alt wide" data-act="diag">Diagnostic du micro</button>
+    <details class="demo"><summary>Outils de démonstration</summary>
+      <p>Fais avancer l'horloge pour voir apparaître retards et alertes.</p>
+      <div class="demo-row"><button class="btn alt" data-act="time" data-d="1">+1 jour</button><button class="btn alt" data-act="time" data-d="3">+3 jours</button><button class="btn alt" data-act="time" data-d="7">+7 jours</button><button class="btn ghost" data-act="time" data-d="0">Réinitialiser</button></div>
+      <div class="demo-row"><button class="btn alt" data-act="notif">Tester une notification</button></div></details>`;
+  openOverlay(h, 'drawer');
+}
+function surahRows(q){
+  q = q.trim().toLowerCase(); let h = '';
+  SURAHS.forEach((s,i) => {
+    const n = i+1;
+    if (q && !(s[0].toLowerCase().includes(q) || s[1].includes(q) || String(n)===q)) return;
+    h += `<button class="pg" data-act="gosurah" data-n="${n}"><span><b>${n}. ${s[0]}</b><small>${s[2]} ayahs</small></span><span style="text-align:right"><span class="ar">${s[1]}</span><small>page ${s[3]}</small></span></button>`;
+  });
+  return h || '<div class="empty">Aucune sourate trouvée.</div>';
+}
+function pagesSheet(){
+  openOverlay(`<h3>Aller à…</h3><p>Une page du mushaf (1 à 604) ou une sourate.</p>
+    <div class="two" style="grid-template-columns:1fr auto"><input id="pn" type="number" inputmode="numeric" min="1" max="604" placeholder="N° de page" aria-label="Numéro de page"><button class="btn" data-act="gopage">Aller</button></div>
+    <input id="q" type="search" placeholder="Nom, numéro ou arabe" autocomplete="off" aria-label="Rechercher une sourate" style="margin-top:12px">
+    <div id="qlist" style="margin-top:12px">${surahRows('')}</div>`);
+}
+function settingsSheet(){
+  const n = Object.keys(S.alias||{}).length;
+  openOverlay(`<h3>Réglages</h3>
+    <h2>Sens des pages</h2><p>Choisis le geste pour passer à la page suivante.</p>
+    <div class="actions" style="margin-top:0"><button class="btn ${S.dir==='right'?'':'alt'}" data-act="dir" data-d="right">Balayer vers la droite</button><button class="btn ${S.dir==='left'?'':'alt'}" data-act="dir" data-d="left">Balayer vers la gauche</button></div>
+    <p style="margin-top:8px">${S.dir==='right'?'Comme un mushaf : la page suivante arrive de la gauche.':'Comme un livre en français : la page suivante arrive de la droite.'}</p>
+    <h2>Ma voix</h2><p>${n} mot${n>1?'s':''} appris. Quand tu valides une ayah avec ✓, l'app retient comment tu prononces les mots mal compris.</p>
+    <button class="btn alt wide" data-act="resetvoice">Réinitialiser ma voix</button>
+    <div class="actions"><button class="btn alt" data-act="close">Fermer</button></div>`);
+}
+function legendSheet(){
+  const L = [
+    ['t-mn','ـو','Madd normal (2 temps)'],
+    ['t-mj','ـآ','Madd séparé (munfasil, 2 à 5 temps)'],
+    ['t-mw','ـآ','Madd lié (muttasil, 4 à 5 temps)'],
+    ['t-ml','ـآ','Madd obligatoire (lazim, 6 temps)'],
+    ['t-g','نّ','Ghunna et idgham'],
+    ['t-ik','ن','Ikhfa'],
+    ['t-iq','ن','Iqlab'],
+    ['t-q','ب','Qalqala'],
+    ['t-sl','ٱ','Lettre muette']
+  ];
+  openOverlay(`<h3>Légende du tajwid</h3><p>Couleurs calculées par règles dans ce prototype. L'app finale utilisera des données de tajwid vérifiées.</p>` +
+    L.map(r=>`<div class="lg"><span class="sw ${r[0]}">${r[1]}</span><span>${r[2]}</span></div>`).join('') +
+    `<div class="actions"><button class="btn alt" data-act="close">Fermer</button></div>`);
+}
+
+
+/* ============ Ajout ============ */
+function addSheet(sel){
+  if (lateList().length){ toast('Révise d’abord tes passages en retard.'); return; }
+  const s0 = sel || Math.floor(((PG[R.page]||{}).c||1)), M = SURAHS[s0-1];
+  const opts = cur => { let o=''; for(let i=1;i<=M[2];i++) o+=`<option value="${i}" ${i===cur?'selected':''}>${i}</option>`; return o; };
+  openOverlay(`<h3>Ce que j'ai appris</h3><p>Les révisions seront planifiées à partir d'aujourd'hui.</p>
+    <label for="f-s">Sourate</label>
+    <select id="f-s">${SURAHS.map((x,i)=>`<option value="${i+1}" ${i+1===s0?'selected':''}>${i+1}. ${x[0]} — ${x[1]}</option>`).join('')}</select>
+    <div class="two"><div><label for="f-a">De l'ayah</label><select id="f-a">${opts(1)}</select></div>
+    <div><label for="f-b">À l'ayah</label><select id="f-b">${opts(M[2])}</select></div></div>
+    <label for="f-d">Appris</label>
+    <select id="f-d"><option value="0">Aujourd'hui</option><option value="2">Il y a 2 jours</option><option value="5">Il y a 5 jours</option><option value="10">Il y a 10 jours</option></select>
+    <div class="actions"><button class="btn ghost" data-act="close">Annuler</button><button class="btn" data-act="save">Enregistrer</button></div>`);
+}
+function saveAdd(){
+  const s = +$('#f-s').value; let a = +$('#f-a').value, b = +$('#f-b').value; if (a>b) [a,b] = [b,a];
+  const ago = +$('#f-d').value;
+  S.passages.push({ id:'p'+Date.now(), s, from:a, to:b, last:now()-ago*DAY, stage:0 });
+  save(); closeOverlay(); draw();
+  toast(ago>=2 ? 'Passage ajouté, déjà en retard.' : 'Passage ajouté. Première révision demain.');
+}
+function testNotif(){
+  const late = lateList();
+  const body = late.length ? `${plural(late.length,'passage')} en retard : révise maintenant.` : 'Une révision t’attend aujourd’hui.';
+  try {
+    if (!('Notification' in window)) throw 0;
+    Notification.requestPermission().then(r => { if (r==='granted') new Notification("Muraja'a",{body}); else toast("🔔 "+body); }).catch(()=>toast("🔔 "+body));
+  } catch(e){ toast("🔔 "+body); }
+}
+function netSheet(){
+  openOverlay(`<h3>Page non téléchargeable ici</h3><p>L'aperçu intégré bloque l'accès à Quran.com. Ouvre ce fichier directement dans Chrome (hors de Claude) pour charger les 604 pages. Elles sont ensuite gardées sur l'appareil.</p>
+    <div class="actions"><button class="btn alt" data-act="close">Fermer</button><button class="btn" data-act="nettest">Tester l'accès</button></div>`);
+}
+async function netTest(){
+  try { const r = await fetch('https://api.quran.com/api/v4/chapters/1'); toast(r.ok ? 'Quran.com accessible ✓' : 'Quran.com a répondu '+r.status); }
+  catch(e){ toast('Réseau bloqué : ouvre le fichier hors de l’aperçu.'); }
+}
+
+
+async function startPassage(id){
+  const p = S.passages.find(x => x.id === id); if (!p) return;
+  closeOverlay(); toast('Chargement…');
+  const pn = await verseToPage(p.s, p.from);
+  try { await ensurePage(pn); } catch(e){ netSheet(); return; }
+  R.page = pn; R.hidden = true; passageSession(p); S.last = pn; save();
+  draw(); toast('Versets Cachés : Activés');
+  prefetch(pn+1);
+}
+
+/* ============ Événements ============ */
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el || el.disabled) return;
+  if (!PG[R.page]) return;
+  const a = el.dataset.act, id = el.dataset.id;
+  switch(a){
+    case 'menu': drawer(); break;
+    case 'pages': pagesSheet(); break;
+    case 'search': pagesSheet(); setTimeout(()=>{ const q=$('#q'); if (q) q.focus(); },60); break;
+    case 'gear': settingsSheet(); break;
+    case 'dir': S.dir = el.dataset.d; save(); settingsSheet(); draw(); break;
+    case 'resetvoice': S.alias = {}; save(); settingsSheet(); toast('Voix réinitialisée.'); break;
+    case 'gosurah': closeOverlay(); go(SURAHS[+el.dataset.n-1][3], 1); break;
+    case 'gopage': { const v = parseInt($('#pn').value,10); if (v>=1 && v<=604){ closeOverlay(); go(v, 1); } else toast('Page entre 1 et 604.'); break; }
+    case 'pnext': go(R.page+1, S.dir==='right'?1:-1); break;
+    case 'pprev': go(R.page-1, S.dir==='right'?-1:1); break;
+    case 'close': closeOverlay(); break;
+    case 'legend': legendSheet(); break;
+    case 'add': addSheet(); break;
+    case 'save': saveAdd(); break;
+    case 'addplan': {
+      const by = {}; R.vlist.forEach(v => { const s = Math.floor(v/1000); (by[s] = by[s]||[]).push(v%1000); });
+      Object.keys(by).forEach(s => S.passages.push({ id:'p'+Date.now()+s, s:+s, from:Math.min(...by[s]), to:Math.max(...by[s]), last:now(), stage:0 }));
+      save(); closeOverlay(); R.hidden = false; draw(); toast('Ajouté au planning.'); break; }
+    case 'review': startPassage(id); break;
+    case 'diag': micDiag(); break;
+    case 'nettest': netTest(); break;
+    case 'del': S.passages = S.passages.filter(p=>p.id!==id); save(); drawer(); draw(); break;
+    case 'time':
+      if (el.dataset.d==='0'){ try{ localStorage.removeItem(KEY); }catch(err){} S = load(); }
+      else S.off += (+el.dataset.d);
+      save(); drawer(); draw(); break;
+    case 'notif': testNotif(); break;
+    case 'eye':
+      R.hidden = !R.hidden;
+      if (R.hidden){ if (R.p) passageSession(R.p); else freeSession(); } else resetSets();
+      draw(); toast('Versets Cachés : '+(R.hidden?'Activés':'Désactivé')); break;
+    case 'back': {
+      const arr = R.vlist.filter(v=>R.revealed.has(v)); const v = arr[arr.length-1];
+      if (v){ R.revealed.delete(v); R.errors.delete(v); [...R.shown].forEach(k=>{ if (k.startsWith(v+':')) R.shown.delete(k); }); [...R.bad].forEach(k=>{ if (k.startsWith(v+':')) R.bad.delete(k); }); R.finishing=false; }
+      refresh(); break; }
+    case 'restart': resetSets(); refresh(); break;
+    case 'mic': listen(); break;
+    case 'right': mark(true); break;
+    case 'wrong': mark(false); break;
+    case 'audio': playAudio(); break;
+    case 'errs': errsSheet(); break;
+    case 'peek': {
+      const v = +el.dataset.v, c = curVerse();
+      if (v===c){ R.revealed.add(v); R.errors.add(v); refresh(); toast('Indice utilisé : ayah '+(v%1000)+' comptée en erreur'); }
+      else toast('Récite d’abord l’ayah '+(c%1000)+'.');
+      break; }
+    case 'finish':
+      R.p.stage = +el.dataset.next; R.p.last = now(); save();
+      closeOverlay(); try{ speechSynthesis.cancel(); }catch(err){}
+      R.p = null; R.hidden = false; resetSets(); draw(); toast('Révision enregistrée.'); break;
+  }
+});
+document.addEventListener('change', e => {
+  if (e.target.id === 'f-s'){
+    const M = SURAHS[+e.target.value-1];
+    const fill = (id,cur) => { let o=''; for(let i=1;i<=M[2];i++) o+=`<option value="${i}" ${i===cur?'selected':''}>${i}</option>`; $(id).innerHTML = o; };
+    fill('#f-a', 1); fill('#f-b', M[2]);
+  }
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'q') $('#qlist').innerHTML = surahRows(e.target.value);
+});
+
+/* ============ Démarrage : directement sur le mushaf ============ */
+(async function init(){
+  $('#reader').innerHTML = '<div style="margin:auto;color:#666;font-family:Figtree,sans-serif">Chargement du mushaf…</div>';
+  let n = S.last || 524;
+  try { await ensurePage(n); } catch(e){ n = 524; await ensurePage(524); }
+  R.page = n; draw();
+  prefetch(n+1); prefetch(n-1);
+})();
+
+</script>
+</body>
+</html>
